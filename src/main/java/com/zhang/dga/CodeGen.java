@@ -19,7 +19,7 @@ public class CodeGen {
         //  String[] tables={ "governance_metric","governance_type","governance_assess_detail"};
         //  String[] tables={ "t_ds_task_definition","t_ds_task_instance"};
         // String[] tables={ "governance_assess_table","governance_assess_tec_owner","governance_assess_global"};
-        String[] tables={ "table_meta_info" };
+        String[] tables={ "table_meta_info_extra" };
 
         FastAutoGenerator.create("jdbc:mysql://hadoop204:3306/dga","root","root")
                 .globalConfig(builder -> {

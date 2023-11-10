@@ -110,12 +110,12 @@ public class TableMetaInfo implements Serializable {
     /**
      * 数据量大小 ( 来源:hdfs)
      */
-    private Long tableSize;
+    private Long tableSize = 0L;
 
     /**
      * 所有副本数据总量大小  ( 来源:hdfs)
      */
-    private Long tableTotalSize;
+    private Long tableTotalSize = 0L;
 
     /**
      * 最后修改时间   ( 来源:hdfs)
