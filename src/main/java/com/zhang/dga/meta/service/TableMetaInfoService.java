@@ -2,6 +2,10 @@ package com.zhang.dga.meta.service;
 
 import com.zhang.dga.meta.bean.TableMetaInfo;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.zhang.dga.meta.bean.TableMetaInfoForQuery;
+import com.zhang.dga.meta.bean.vo.TableMetaInfoVO;
+
+import java.util.List;
 
 /**
  * <p>
@@ -12,5 +16,9 @@ import com.baomidou.mybatisplus.extension.service.IService;
  * @since 2023-11-08
  */
 public interface TableMetaInfoService extends IService<TableMetaInfo> {
+
+    List<TableMetaInfoVO> getTableMetaInfoList(TableMetaInfoForQuery tableMetaInfoForQuery);
+
+    Integer getTableMetaInfoCount(TableMetaInfoForQuery tableMetaInfoForQuery);
 
 }

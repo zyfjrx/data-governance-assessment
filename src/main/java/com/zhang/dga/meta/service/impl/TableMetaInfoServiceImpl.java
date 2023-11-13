@@ -5,10 +5,13 @@ import com.alibaba.fastjson.support.spring.PropertyPreFilters;
 import com.baomidou.dynamic.datasource.annotation.DS;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.zhang.dga.meta.bean.TableMetaInfo;
+import com.zhang.dga.meta.bean.TableMetaInfoForQuery;
+import com.zhang.dga.meta.bean.vo.TableMetaInfoVO;
 import com.zhang.dga.meta.mapper.TableMetaInfoMapper;
 import com.zhang.dga.meta.service.TableMetaInfoExtraService;
 import com.zhang.dga.meta.service.TableMetaInfoService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.apache.calcite.sql.SqlUtil;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -71,7 +74,7 @@ public class TableMetaInfoServiceImpl extends ServiceImpl<TableMetaInfoMapper, T
 
     public void initTableMetaInfo(String assessDate, String schemaName) throws Exception {
         // 清理当日已经存在的数据
-        this.remove(new QueryWrapper<TableMetaInfo>().eq("assess_date",assessDate));
+        this.remove(new QueryWrapper<TableMetaInfo>().eq("assess_date", assessDate));
         List<String> allTableNameList = hiveClient.getAllTables(schemaName);
         System.out.println("allTables" + allTableNameList);
         ArrayList<TableMetaInfo> tableMetaInfos = new ArrayList<>(allTableNameList.size());
@@ -88,7 +91,7 @@ public class TableMetaInfoServiceImpl extends ServiceImpl<TableMetaInfoMapper, T
         saveBatch(tableMetaInfos);
 
         // 初始化辅助信息表
-        tableMetaInfoExtraService.initTableMetaExtra(assessDate,tableMetaInfos);
+        tableMetaInfoExtraService.initTableMetaExtra(assessDate, tableMetaInfos);
     }
 
     // 从hive提取数据
@@ -189,22 +192,65 @@ public class TableMetaInfoServiceImpl extends ServiceImpl<TableMetaInfoMapper, T
                 tableMetaInfo.setTableTotalSize(fileTotalSize);
                 // 最后访问时间
                 if (tableMetaInfo.getTableLastAccessTime() != null) {
-                    if (tableMetaInfo.getTableLastAccessTime().getTime()<fileStatus.getAccessTime()){
+                    if (tableMetaInfo.getTableLastAccessTime().getTime() < fileStatus.getAccessTime()) {
                         tableMetaInfo.setTableLastAccessTime(new Date(fileStatus.getAccessTime()));
                     }
-                }else {
+                } else {
                     tableMetaInfo.setTableLastAccessTime(new Date(fileStatus.getAccessTime()));
                 }
 
                 // 最后修改时间
                 if (tableMetaInfo.getTableLastModifyTime() != null) {
-                    if (tableMetaInfo.getTableLastModifyTime().getTime()<fileStatus.getModificationTime()){
+                    if (tableMetaInfo.getTableLastModifyTime().getTime() < fileStatus.getModificationTime()) {
                         tableMetaInfo.setTableLastModifyTime(new Date(fileStatus.getModificationTime()));
                     }
-                }else {
+                } else {
                     tableMetaInfo.setTableLastModifyTime(new Date(fileStatus.getModificationTime()));
                 }
             }
         }
+    }
+
+    // 根据查询条件和分页来进行列表查询
+    @Override
+    public List<TableMetaInfoVO> getTableMetaInfoList(TableMetaInfoForQuery tableMetaInfoForQuery) {
+        StringBuilder sqlSb = new StringBuilder(200);
+        sqlSb.append(" select  tm.id ,tm.table_name,tm.schema_name,table_comment,table_size,table_total_size,tec_owner_user_name,busi_owner_user_name, table_last_access_time,table_last_modify_time");
+        sqlSb.append(" from table_meta_info tm  join table_meta_info_extra te on tm.table_name=te.table_name and tm.schema_name=te.schema_name");
+        sqlSb.append(" where assess_date = (select  max(tm1.assess_date) from table_meta_info  tm1 group by tm1.table_name,tm1.schema_name having tm.schema_name=tm1.schema_name and tm.table_name=tm1.table_name)  ");
+        if (tableMetaInfoForQuery.getSchemaName() != null && tableMetaInfoForQuery.getSchemaName().length() > 0) {
+            sqlSb.append(" and tm.schema_name like '%").append(tableMetaInfoForQuery.getSchemaName()).append("%'");
+        }
+        if (tableMetaInfoForQuery.getTableName() != null && tableMetaInfoForQuery.getTableName().length() > 0) {
+            sqlSb.append(" and table_name like '%").append(tableMetaInfoForQuery.getTableName()).append("%'");
+        }
+        if (tableMetaInfoForQuery.getDwLevel() != null && tableMetaInfoForQuery.getDwLevel().length() > 0) {
+            sqlSb.append(" and dw_level like '%").append(tableMetaInfoForQuery.getDwLevel()).append("%'");
+        }
+        // 分页 limit x,x 行号 = （页码 -1）* 每页行数
+        int rowNo = (tableMetaInfoForQuery.getPageNo() - 1) * tableMetaInfoForQuery.getPageSize();
+        sqlSb.append(" limit "+rowNo+","+tableMetaInfoForQuery.getPageSize());
+        List<TableMetaInfoVO> tableMetaInfoList = this.baseMapper.getTableMetaInfoList(sqlSb.toString());
+        return tableMetaInfoList;
+    }
+
+    @Override
+    public Integer getTableMetaInfoCount(TableMetaInfoForQuery tableMetaInfoForQuery) {
+        StringBuilder sqlSb = new StringBuilder(200);
+        sqlSb.append(" select  count(*) ");
+        sqlSb.append(" from table_meta_info tm  join table_meta_info_extra te on tm.table_name=te.table_name and tm.schema_name=te.schema_name");
+        sqlSb.append(" where assess_date = (select  max(tm1.assess_date) from table_meta_info  tm1 group by tm1.table_name,tm1.schema_name having tm.schema_name=tm1.schema_name and tm.table_name=tm1.table_name)  ");
+        if (tableMetaInfoForQuery.getSchemaName() != null && tableMetaInfoForQuery.getSchemaName().length() > 0) {
+            sqlSb.append(" and tm.schema_name like '%").append(tableMetaInfoForQuery.getSchemaName()).append("%'");
+        }
+        if (tableMetaInfoForQuery.getTableName() != null && tableMetaInfoForQuery.getTableName().length() > 0) {
+            sqlSb.append(" and table_name like '%").append(tableMetaInfoForQuery.getTableName()).append("%'");
+        }
+        if (tableMetaInfoForQuery.getDwLevel() != null && tableMetaInfoForQuery.getDwLevel().length() > 0) {
+            sqlSb.append(" and dw_level like '%").append(tableMetaInfoForQuery.getDwLevel()).append("%'");
+        }
+
+        Integer total  = this.baseMapper.getTableMetaInfoCount(sqlSb.toString());
+        return total;
     }
 }
