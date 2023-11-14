@@ -1,13 +1,14 @@
 package com.zhang.dga.meta.controller;
 
+import com.alibaba.fastjson.JSON;
+import com.zhang.dga.meta.bean.TableMetaInfo;
+import com.zhang.dga.meta.bean.TableMetaInfoExtra;
 import com.zhang.dga.meta.bean.TableMetaInfoForQuery;
 import com.zhang.dga.meta.bean.vo.TableMetaInfoVO;
+import com.zhang.dga.meta.service.TableMetaInfoExtraService;
 import com.zhang.dga.meta.service.TableMetaInfoService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.List;
@@ -28,6 +29,10 @@ public class TableMetaInfoController {
     @Autowired
     TableMetaInfoService tableMetaInfoService;
 
+    @Autowired
+    TableMetaInfoExtraService tableMetaInfoExtraService;
+
+
     @GetMapping("/table-list")
     @CrossOrigin
     public Map tableList(TableMetaInfoForQuery tableMetaInfoForQuery){
@@ -42,5 +47,18 @@ public class TableMetaInfoController {
         resultMap.put("list",tableMetaInfoList);
         resultMap.put("total",count);
         return resultMap;
+    }
+
+    @GetMapping("/table/{tableId}")
+    @CrossOrigin
+    public String getTableMeta(@PathVariable("tableId") Long tableId){
+        TableMetaInfo tableMetaInfo = tableMetaInfoService.getTableMetaInfo(tableId);
+        return JSON.toJSONString(tableMetaInfo);
+    }
+
+    @PostMapping("/tableExtra")
+    public String saveTableMetaInfoExtra(@RequestBody TableMetaInfoExtra tableMetaInfoExtra){
+        tableMetaInfoExtraService.saveTableMetaInfoExtra(tableMetaInfoExtra);
+        return "success";
     }
 }

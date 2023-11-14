@@ -16,4 +16,7 @@ import java.util.List;
  */
 public interface TableMetaInfoExtraService extends IService<TableMetaInfoExtra> {
     void initTableMetaExtra(String assessDate, List<TableMetaInfo> tableMetaInfoList);
+
+    void saveTableMetaInfoExtra(TableMetaInfoExtra tableMetaInfoExtra);
+
 }

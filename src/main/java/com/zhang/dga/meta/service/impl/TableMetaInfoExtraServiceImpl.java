@@ -57,6 +57,15 @@ public class TableMetaInfoExtraServiceImpl extends ServiceImpl<TableMetaInfoExtr
 
     }
 
+    @Override
+    public void saveTableMetaInfoExtra(TableMetaInfoExtra tableMetaInfoExtra) {
+        tableMetaInfoExtra.setUpdateTime(new Date());
+        QueryWrapper<TableMetaInfoExtra> wrapper = new QueryWrapper<TableMetaInfoExtra>()
+                .eq("schema_name", tableMetaInfoExtra.getSchemaName())
+                .eq("table_name", tableMetaInfoExtra.getTableName());
+        update(tableMetaInfoExtra,wrapper);
+    }
+
     private String getInitDwLevelByTableName(String tableName) {
         if (tableName.startsWith("ods")) {
             return "ODS";

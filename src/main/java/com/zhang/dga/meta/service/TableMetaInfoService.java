@@ -21,4 +21,5 @@ public interface TableMetaInfoService extends IService<TableMetaInfo> {
 
     Integer getTableMetaInfoCount(TableMetaInfoForQuery tableMetaInfoForQuery);
 
+    TableMetaInfo getTableMetaInfo(Long tableId);
 }

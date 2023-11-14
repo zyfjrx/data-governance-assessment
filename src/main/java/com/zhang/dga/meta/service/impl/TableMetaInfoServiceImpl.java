@@ -4,14 +4,15 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.support.spring.PropertyPreFilters;
 import com.baomidou.dynamic.datasource.annotation.DS;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.zhang.dga.common.util.SqlUtil;
 import com.zhang.dga.meta.bean.TableMetaInfo;
+import com.zhang.dga.meta.bean.TableMetaInfoExtra;
 import com.zhang.dga.meta.bean.TableMetaInfoForQuery;
 import com.zhang.dga.meta.bean.vo.TableMetaInfoVO;
 import com.zhang.dga.meta.mapper.TableMetaInfoMapper;
 import com.zhang.dga.meta.service.TableMetaInfoExtraService;
 import com.zhang.dga.meta.service.TableMetaInfoService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import org.apache.calcite.sql.SqlUtil;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -219,13 +220,13 @@ public class TableMetaInfoServiceImpl extends ServiceImpl<TableMetaInfoMapper, T
         sqlSb.append(" from table_meta_info tm  join table_meta_info_extra te on tm.table_name=te.table_name and tm.schema_name=te.schema_name");
         sqlSb.append(" where assess_date = (select  max(tm1.assess_date) from table_meta_info  tm1 group by tm1.table_name,tm1.schema_name having tm.schema_name=tm1.schema_name and tm.table_name=tm1.table_name)  ");
         if (tableMetaInfoForQuery.getSchemaName() != null && tableMetaInfoForQuery.getSchemaName().length() > 0) {
-            sqlSb.append(" and tm.schema_name like '%").append(tableMetaInfoForQuery.getSchemaName()).append("%'");
+            sqlSb.append(" and tm.schema_name like '%").append(SqlUtil.filterUnsafeSql(tableMetaInfoForQuery.getSchemaName())).append("%'");
         }
         if (tableMetaInfoForQuery.getTableName() != null && tableMetaInfoForQuery.getTableName().length() > 0) {
-            sqlSb.append(" and table_name like '%").append(tableMetaInfoForQuery.getTableName()).append("%'");
+            sqlSb.append(" and table_name like '%").append(SqlUtil.filterUnsafeSql(tableMetaInfoForQuery.getTableName())).append("%'");
         }
         if (tableMetaInfoForQuery.getDwLevel() != null && tableMetaInfoForQuery.getDwLevel().length() > 0) {
-            sqlSb.append(" and dw_level like '%").append(tableMetaInfoForQuery.getDwLevel()).append("%'");
+            sqlSb.append(" and dw_level like '%").append(SqlUtil.filterUnsafeSql(tableMetaInfoForQuery.getDwLevel())).append("%'");
         }
         // 分页 limit x,x 行号 = （页码 -1）* 每页行数
         int rowNo = (tableMetaInfoForQuery.getPageNo() - 1) * tableMetaInfoForQuery.getPageSize();
@@ -241,16 +242,27 @@ public class TableMetaInfoServiceImpl extends ServiceImpl<TableMetaInfoMapper, T
         sqlSb.append(" from table_meta_info tm  join table_meta_info_extra te on tm.table_name=te.table_name and tm.schema_name=te.schema_name");
         sqlSb.append(" where assess_date = (select  max(tm1.assess_date) from table_meta_info  tm1 group by tm1.table_name,tm1.schema_name having tm.schema_name=tm1.schema_name and tm.table_name=tm1.table_name)  ");
         if (tableMetaInfoForQuery.getSchemaName() != null && tableMetaInfoForQuery.getSchemaName().length() > 0) {
-            sqlSb.append(" and tm.schema_name like '%").append(tableMetaInfoForQuery.getSchemaName()).append("%'");
+            sqlSb.append(" and tm.schema_name like '%").append(SqlUtil.filterUnsafeSql(tableMetaInfoForQuery.getSchemaName())).append("%'");
         }
         if (tableMetaInfoForQuery.getTableName() != null && tableMetaInfoForQuery.getTableName().length() > 0) {
-            sqlSb.append(" and table_name like '%").append(tableMetaInfoForQuery.getTableName()).append("%'");
+            sqlSb.append(" and table_name like '%").append(SqlUtil.filterUnsafeSql(tableMetaInfoForQuery.getTableName())).append("%'");
         }
         if (tableMetaInfoForQuery.getDwLevel() != null && tableMetaInfoForQuery.getDwLevel().length() > 0) {
-            sqlSb.append(" and dw_level like '%").append(tableMetaInfoForQuery.getDwLevel()).append("%'");
+            sqlSb.append(" and dw_level like '%").append(SqlUtil.filterUnsafeSql(tableMetaInfoForQuery.getDwLevel())).append("%'");
         }
 
         Integer total  = this.baseMapper.getTableMetaInfoCount(sqlSb.toString());
         return total;
+    }
+
+    @Override
+    public TableMetaInfo getTableMetaInfo(Long tableId) {
+        TableMetaInfo tableMetaInfo = getById(tableId);
+        TableMetaInfoExtra tableMetaInfoExtra = tableMetaInfoExtraService.getOne(new QueryWrapper<TableMetaInfoExtra>()
+                .eq("table_name", tableMetaInfo.getTableName())
+                .eq("schema_name", tableMetaInfo.getSchemaName())
+        );
+        tableMetaInfo.setTableMetaInfoExtra(tableMetaInfoExtra);
+        return tableMetaInfo;
     }
 }
