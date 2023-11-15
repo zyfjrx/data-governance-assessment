@@ -17,9 +17,13 @@ import java.util.List;
  */
 public interface TableMetaInfoService extends IService<TableMetaInfo> {
 
+    void  initTableMetaInfo(String assessDate,String schemaName) throws  Exception;
+
     List<TableMetaInfoVO> getTableMetaInfoList(TableMetaInfoForQuery tableMetaInfoForQuery);
 
     Integer getTableMetaInfoCount(TableMetaInfoForQuery tableMetaInfoForQuery);
 
     TableMetaInfo getTableMetaInfo(Long tableId);
+
+    List<TableMetaInfo> getTableMetaWithExtraList();
 }

@@ -10,6 +10,7 @@ import com.zhang.dga.meta.service.TableMetaInfoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,7 +36,7 @@ public class TableMetaInfoController {
 
     @GetMapping("/table-list")
     @CrossOrigin
-    public Map tableList(TableMetaInfoForQuery tableMetaInfoForQuery){
+    public Map tableList(TableMetaInfoForQuery tableMetaInfoForQuery) {
 
         //查询列表
         List<TableMetaInfoVO> tableMetaInfoList = tableMetaInfoService.getTableMetaInfoList(tableMetaInfoForQuery);
@@ -43,22 +44,31 @@ public class TableMetaInfoController {
         tableMetaInfoForQuery.setPageSize(Integer.MAX_VALUE);
         Integer count = tableMetaInfoService.getTableMetaInfoCount(tableMetaInfoForQuery);
         //封装结果
-        Map resultMap=new HashMap();
-        resultMap.put("list",tableMetaInfoList);
-        resultMap.put("total",count);
+        Map resultMap = new HashMap();
+        resultMap.put("list", tableMetaInfoList);
+        resultMap.put("total", count);
         return resultMap;
     }
 
     @GetMapping("/table/{tableId}")
     @CrossOrigin
-    public String getTableMeta(@PathVariable("tableId") Long tableId){
+    public String getTableMeta(@PathVariable("tableId") Long tableId) {
         TableMetaInfo tableMetaInfo = tableMetaInfoService.getTableMetaInfo(tableId);
         return JSON.toJSONString(tableMetaInfo);
     }
 
     @PostMapping("/tableExtra")
-    public String saveTableMetaInfoExtra(@RequestBody TableMetaInfoExtra tableMetaInfoExtra){
-        tableMetaInfoExtraService.saveTableMetaInfoExtra(tableMetaInfoExtra);
+    public String saveTableExtra(@RequestBody TableMetaInfoExtra tableMetaInfoExtra) {
+        tableMetaInfoExtra.setUpdateTime(new Date());
+        tableMetaInfoExtraService.saveOrUpdate(tableMetaInfoExtra);
         return "success";
     }
+
+    @PostMapping("/init-tables/{schemaName}/{assessDate}")
+    public String updateMetaData(@PathVariable("schemaName") String schemaName, @PathVariable("assessDate") String assessDate) throws Exception {
+        tableMetaInfoService.initTableMetaInfo(assessDate,schemaName);
+        return "success";
+    }
+
+
 }

@@ -35,10 +35,7 @@ import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * <p>
@@ -133,7 +130,7 @@ public class TableMetaInfoServiceImpl extends ServiceImpl<TableMetaInfoMapper, T
             tableMetaInfo.setTableRowFormatSerde(table.getSd().getSerdeInfo().getSerializationLib());
 
             // 创建时间
-            tableMetaInfo.setTableCreateTime(DateFormatUtils.format(new Date(table.getCreateTime() * 1000L), "yyyy-MM-dd HH:mm:ss"));
+            tableMetaInfo.setTableCreateTime(DateFormatUtils.format(new Date(table.getCreateTime() * 1000L), "yyyy-MM-dd HH:mm:ss", TimeZone.getTimeZone("Asia/Shanghai")));
 
             // 表类型
             tableMetaInfo.setTableType(table.getTableType());
@@ -230,7 +227,7 @@ public class TableMetaInfoServiceImpl extends ServiceImpl<TableMetaInfoMapper, T
         }
         // 分页 limit x,x 行号 = （页码 -1）* 每页行数
         int rowNo = (tableMetaInfoForQuery.getPageNo() - 1) * tableMetaInfoForQuery.getPageSize();
-        sqlSb.append(" limit "+rowNo+","+tableMetaInfoForQuery.getPageSize());
+        sqlSb.append(" limit " + rowNo + "," + tableMetaInfoForQuery.getPageSize());
         List<TableMetaInfoVO> tableMetaInfoList = this.baseMapper.getTableMetaInfoList(sqlSb.toString());
         return tableMetaInfoList;
     }
@@ -251,7 +248,7 @@ public class TableMetaInfoServiceImpl extends ServiceImpl<TableMetaInfoMapper, T
             sqlSb.append(" and dw_level like '%").append(SqlUtil.filterUnsafeSql(tableMetaInfoForQuery.getDwLevel())).append("%'");
         }
 
-        Integer total  = this.baseMapper.getTableMetaInfoCount(sqlSb.toString());
+        Integer total = this.baseMapper.getTableMetaInfoCount(sqlSb.toString());
         return total;
     }
 
@@ -264,5 +261,10 @@ public class TableMetaInfoServiceImpl extends ServiceImpl<TableMetaInfoMapper, T
         );
         tableMetaInfo.setTableMetaInfoExtra(tableMetaInfoExtra);
         return tableMetaInfo;
+    }
+
+    @Override
+    public List<TableMetaInfo> getTableMetaWithExtraList() {
+        return baseMapper.selectTableMetaWithExtraList();
     }
 }

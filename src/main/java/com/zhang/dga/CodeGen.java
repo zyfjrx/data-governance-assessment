@@ -16,10 +16,10 @@ import java.util.function.Consumer;
  **/
 public class CodeGen {
     public static void main(String[] args) {
-        //  String[] tables={ "governance_metric","governance_type","governance_assess_detail"};
+          String[] tables={ "governance_metric","governance_type","governance_assess_detail"};
         //  String[] tables={ "t_ds_task_definition","t_ds_task_instance"};
         // String[] tables={ "governance_assess_table","governance_assess_tec_owner","governance_assess_global"};
-        String[] tables={ "table_meta_info_extra" };
+        //String[] tables={ "table_meta_info_extra" };
 
         FastAutoGenerator.create("jdbc:mysql://hadoop204:3306/dga","root","root")
                 .globalConfig(builder -> {
@@ -30,7 +30,7 @@ public class CodeGen {
                 })
                 .packageConfig(builder -> {                 //各个package 名称
                     builder.parent("com.zhang.dga")
-                            .moduleName("meta")
+                            .moduleName("governance")
                             .entity("bean")
                             .service("service")
                             .serviceImpl("service.impl")
