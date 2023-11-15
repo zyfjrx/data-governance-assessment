@@ -2,6 +2,8 @@ package com.zhang.dga.governance.service.impl;
 
 import com.baomidou.dynamic.datasource.annotation.DS;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.zhang.dga.common.util.SpringBeanProvider;
+import com.zhang.dga.governance.assessor.Assessor;
 import com.zhang.dga.governance.bean.GovernanceAssessDetail;
 import com.zhang.dga.governance.bean.GovernanceMetric;
 import com.zhang.dga.governance.mapper.GovernanceAssessDetailMapper;
@@ -32,6 +34,9 @@ public class GovernanceAssessDetailServiceImpl extends ServiceImpl<GovernanceAss
     @Autowired
     GovernanceMetricService governanceMetricService;
 
+    @Autowired
+    SpringBeanProvider springBeanProvider;
+
     public   void  allMetricAssess(String assessDate){
 
         //1   查询出 要考评的表（最新的元数据 含辅助信息） List<TableMetaInfo>
@@ -42,6 +47,13 @@ public class GovernanceAssessDetailServiceImpl extends ServiceImpl<GovernanceAss
 
         //2    查询出 要考评的指标列表  List<GovernanceMetric>
         List<GovernanceMetric> governanceMetricList=governanceMetricService.list(new QueryWrapper<GovernanceMetric>().eq("is_disabled","0"));
+
+        for (TableMetaInfo tableMetaInfo : tableMetaInfoList) {
+            for (GovernanceMetric governanceMetric : governanceMetricList) {
+                Assessor assessor = springBeanProvider.getBean(governanceMetric.getMetricCode(), Assessor.class);
+                assessor.metricAssess();
+            }
+        }
 
         System.out.println("tableMetaInfoList"+tableMetaInfoList);
         System.out.println("governanceMetricList"+governanceMetricList);
